@@ -1,6 +1,8 @@
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
+import requests
+from kakao import search_books
 import models
 import schemas
 from auth import create_access_token, hash_password, verify_password
@@ -39,3 +41,10 @@ def login(req: schemas.LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다.")
 
     return schemas.TokenResponse(access_token=create_access_token(user.id))
+
+@app.get("/books/search")
+def books_search(q: str, page: int = 1):
+    try:
+        return search_books(q, page)
+    except requests.RequestException:
+        raise HTTPException(status_code=502, detail="도서 검색 서버에 연결하지 못했습니다.")
